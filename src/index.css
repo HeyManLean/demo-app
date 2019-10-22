@@ -1,0 +1,18 @@
+.product-row {
+    display: inline-block;
+    width: 100px;
+}
+.product-row-red {
+    display: inline-block;
+    width: 100px;
+    color: red;
+    font-weight: 1000;
+}
+.product-category-row {
+    font-weight: 1000;
+}
+.product-header {
+    display: inline-block;
+    width: 100px;
+    font-weight: 1000;
+}

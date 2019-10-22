@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { thisExpression } from '@babel/types';
+import './index.css';
 
 
 /*
@@ -36,29 +36,24 @@ class FilterableProductTable extends React.Component {
         this.state = {
             'filterText': '',
             'inStockOnly': false,
-            'allProducts': products,
-            'filteredProducts': allProducts,
+            'allProducts': allProducts,
+            'filteredProducts': {},
         }
 
         this.handleTextInput = this.handleTextInput.bind(this);
         this.handleChecked = this.handleChecked.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
     }
 
     handleTextInput(event) {
-        console.log(event.target.value);
         this.setState({
             'filterText': event.target.value
         });
-        filterProducts();
     }
 
     handleChecked(event) {
-        console.log(event.target.checked);
         this.setState({
             'inStockOnly': event.target.checked
         });
-        filterProducts();
     }
 
     fetchAllProducts() {
@@ -66,33 +61,38 @@ class FilterableProductTable extends React.Component {
     }
 
     filterProducts() {
-        let filteredProducts = [];
+        const filterText = this.state.filterText;
+        const inStockOnly = this.state.inStockOnly;
+
+        let filteredProducts = {};
 
         this.state.allProducts.forEach(element => {
-            if (this.state.inStockOnly !== element.stocked) {
-                continue
+            if (inStockOnly && !element.stocked) {
+                return;
             }
-            if (!element.name.startsWith(this.state.filterText)) {
-                contineu
+            if (!element.name.toLowerCase().startsWith(filterText.toLowerCase())) {
+                return;
             }
-            filteredProducts.push(element);
+            const category = element.category;
+            if (!filteredProducts[category]) {
+                filteredProducts[category] = [];
+            }
+            filteredProducts[category].push(element);
         });
 
-        this.setState({
-            'filteredProducts': filteredProducts,
-        });
+        return filteredProducts;
     }
 
     render() {
+        let filteredProducts = this.filterProducts();
         return (
             <div>
                 <SearchBar
                     value={this.state.filterText}
                     onTextChange={this.handleTextInput}
                     onChecked={this.handleChecked}
-                    onSubmit={this.handleSubmit}
                 ></SearchBar>
-                <ProductTable></ProductTable>
+                <ProductTable filteredProducts={filteredProducts}></ProductTable>
             </div>
         );
     }
@@ -122,18 +122,59 @@ class SearchBar extends React.Component {
 
 class ProductTable extends React.Component {
     render() {
-        return <ul></ul>
+        const filteredProducts = this.props.filteredProducts;
+        let displayData = [];
+        displayData.push(
+            <ProductRow
+                key='name'
+                name='name'
+                price='price'
+                nameClassName='product-header'
+                priceClassName='product-header'
+            />
+        )
+        Object.keys(filteredProducts).forEach((category) => {
+            displayData.push(
+                <ProductCategoryRow value={category} key={category}></ProductCategoryRow>
+            );
+
+            const productList = filteredProducts[category];
+
+            productList.forEach((element) => {
+                const className = element.stocked? 'product-row': 'product-row-red';
+                displayData.push(
+                    <ProductRow
+                        key={element.name}
+                        name={element.name}
+                        price={element.price}
+                        nameClassName={className}
+                    />
+                );
+            });
+        })
+        console.log(displayData);
+
+        return <div>{displayData}</div>
     }
 }
 
 
 class ProductCategoryRow extends React.Component {
-
+    render() {
+        return <div className="product-category-row">{this.props.value}</div>
+    }
 }
 
 
 class ProductRow extends React.Component {
-
+    render() {
+        return (
+            <div>
+                <div className={this.props.nameClassName}>{this.props.name}</div>
+                <div className={this.props.priceClassName || 'product-row'}>{this.props.price}</div>
+            </div>
+        )
+    }
 }
 
 
